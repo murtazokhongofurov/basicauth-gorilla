@@ -1,8 +1,7 @@
-package main
+package basicauth
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -23,8 +22,8 @@ type Config struct {
 	RestrictedUrls []string `json:"restricted_urls"`
 	// If this field is set to true, all the requests are authenticated
 	// If this field is not set or set to true, other fields are checked such as, RestrictedMethods and RestrictedUrls
-	RequireAuthForAll   bool `json:"require_auth_for_all"`
-	
+	RequireAuthForAll bool `json:"require_auth_for_all"`
+	// UnauthorizedHandler is an HTTP handler function that is called when a request is not authorized.
 	UnauthorizedHandler http.HandlerFunc
 }
 
@@ -48,48 +47,4 @@ func New(config Config) mux.MiddlewareFunc {
 			h.ServeHTTP(w, r)
 		})
 	}
-}
-
-func requiresAuth(config Config, r *http.Request) bool {
-	if config.RequireAuthForAll {
-		return true
-	}
-
-	method := r.Method
-	for _, restrictedMethod := range config.RestrictedMethods {
-		if method == restrictedMethod {
-			return true
-		}
-	}
-
-	url := r.URL.Path
-	for _, restrictedURL := range config.RestrictedUrls {
-		if matchURL(restrictedURL, url) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func matchURL(pattern, url string) bool {
-	if pattern == url {
-		return true
-	}
-
-	if strings.HasSuffix(pattern, "*") {
-		prefix := strings.TrimSuffix(pattern, "*")
-		return strings.HasPrefix(url, prefix)
-	}
-
-	return false
-}
-
-func isAuthorized(username, password string, users []User) bool {
-	for _, user := range users {
-		if user.UserName == username && user.Password == password {
-			return true
-		}
-	}
-	return false
 }
