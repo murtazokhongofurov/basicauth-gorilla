@@ -1,4 +1,4 @@
-module github.com/murtazokhongofurov/basicauth-gorilla
+module github.com/basicauth-gorilla
 
 go 1.20
 
