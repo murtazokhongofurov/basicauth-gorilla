@@ -2,8 +2,6 @@ package basicauth
 
 import (
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 // This is configuration struct of Basic Auth
@@ -30,21 +28,4 @@ type Config struct {
 type User struct {
 	UserName string `json:"user_name"`
 	Password string `json:"password"`
-}
-
-func New(config Config) mux.MiddlewareFunc {
-	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if !requiresAuth(config, r) {
-				h.ServeHTTP(w, r)
-				return
-			}
-			username, password, ok := r.BasicAuth()
-			if !ok || !isAuthorized(username, password, config.Users) {
-				config.UnauthorizedHandler(w, r)
-				return
-			}
-			h.ServeHTTP(w, r)
-		})
-	}
 }

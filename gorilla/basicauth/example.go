@@ -1,24 +1,22 @@
-package main
+package basicauth
 
 import (
 	"log"
 	"net/http"
 
-	"github.com/basicauth-gorilla/gorilla/basicauth"
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	router := mux.NewRouter()
 
-	config := basicauth.Config{Users: []basicauth.User{
-		{
-			UserName: "user1",
-			Password: "password1",
+	// Create a config with your desired values
+	config := Config{
+		Users: []User{
+			{UserName: "user1", Password: "password1"},
 		},
-	},
-		RestrictedMethods: []string{"PUT", "POST", "GET", "DELETE"},
-		RestrictedUrls:    []string{"/", "/v1/user", "/v1/user/{id}", "/v1/admin"},
+		RestrictedMethods: []string{"PUT", "POST", "PATCH", "DELETE", "GET"},
+		RestrictedUrls:    []string{"/v1/user", "/v1/user/{key}", "/v1/admin"},
 		RequireAuthForAll: true,
 		UnauthorizedHandler: func(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -26,7 +24,7 @@ func main() {
 	}
 
 	// Apply the Basic Auth middleware to the router
-	router.Use(basicauth.New(config))
+	router.Use(Middleware(config))
 
 	// Define your routes and handlers
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -35,6 +33,10 @@ func main() {
 
 	router.HandleFunc("/v1/user", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("User endpoint"))
+	}).Methods("GET")
+
+	router.HandleFunc("/v1/admin", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Admin endpoint"))
 	}).Methods("GET")
 
 	// Start the server
